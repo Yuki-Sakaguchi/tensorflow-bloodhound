@@ -21,6 +21,74 @@
         width: 100%;
         height: 100%;
         object-fit: fill;
+        display: none;
+      }
+      .loading {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto !important;
+      }
+      .sk-cube-grid {
+        width: 40px;
+        height: 40px;
+      }
+      .sk-cube-grid .sk-cube {
+        width: 33%;
+        height: 33%;
+        background-color: #ccc;
+        float: left;
+        -webkit-animation: sk-cubeGridScaleDelay 1.3s infinite ease-in-out;
+                animation: sk-cubeGridScaleDelay 1.3s infinite ease-in-out; 
+      }
+      .sk-cube-grid .sk-cube1 {
+        -webkit-animation-delay: 0.2s;
+                animation-delay: 0.2s; }
+      .sk-cube-grid .sk-cube2 {
+        -webkit-animation-delay: 0.3s;
+                animation-delay: 0.3s; }
+      .sk-cube-grid .sk-cube3 {
+        -webkit-animation-delay: 0.4s;
+                animation-delay: 0.4s; }
+      .sk-cube-grid .sk-cube4 {
+        -webkit-animation-delay: 0.1s;
+                animation-delay: 0.1s; }
+      .sk-cube-grid .sk-cube5 {
+        -webkit-animation-delay: 0.2s;
+                animation-delay: 0.2s; }
+      .sk-cube-grid .sk-cube6 {
+        -webkit-animation-delay: 0.3s;
+                animation-delay: 0.3s; }
+      .sk-cube-grid .sk-cube7 {
+        -webkit-animation-delay: 0s;
+                animation-delay: 0s; }
+      .sk-cube-grid .sk-cube8 {
+        -webkit-animation-delay: 0.1s;
+                animation-delay: 0.1s; }
+      .sk-cube-grid .sk-cube9 {
+        -webkit-animation-delay: 0.2s;
+                animation-delay: 0.2s; }
+
+      @-webkit-keyframes sk-cubeGridScaleDelay {
+        0%, 70%, 100% {
+          -webkit-transform: scale3D(1, 1, 1);
+                  transform: scale3D(1, 1, 1);
+        } 35% {
+          -webkit-transform: scale3D(0, 0, 1);
+                  transform: scale3D(0, 0, 1); 
+        }
+      }
+
+      @keyframes sk-cubeGridScaleDelay {
+        0%, 70%, 100% {
+          -webkit-transform: scale3D(1, 1, 1);
+                  transform: scale3D(1, 1, 1);
+        } 35% {
+          -webkit-transform: scale3D(0, 0, 1);
+                  transform: scale3D(0, 0, 1);
+        } 
       }
       .wrapper {
         position: relative;
@@ -52,6 +120,10 @@
         background-image: url(./icon_ability.png);
         left: -300px;
       }
+      .disabled {
+        opacity: 0.3;
+        pointer-events: none;
+      }
     </style>
     <!-- Load TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.2"></script>
@@ -62,13 +134,25 @@
     <div class="wrapper">
       <video id="video" autoplay playsinline="true" width="500" height="500"></video>
       <canvas id="canvas"></canvas>
-      <button id="ult" class="button ult" onClick="ult()"></button>
-      <button id="ability" class="button ability" onClick="ability()"></button>
+      <button id="ult" class="button ult disabled" onClick="ult()"></button>
+      <button id="ability" class="button ability disabled" onClick="ability()"></button>
+    </div>
+    <div id="loading" class="sk-cube-grid loading">
+      <div class="sk-cube sk-cube1"></div>
+      <div class="sk-cube sk-cube2"></div>
+      <div class="sk-cube sk-cube3"></div>
+      <div class="sk-cube sk-cube4"></div>
+      <div class="sk-cube sk-cube5"></div>
+      <div class="sk-cube sk-cube6"></div>
+      <div class="sk-cube sk-cube7"></div>
+      <div class="sk-cube sk-cube8"></div>
+      <div class="sk-cube sk-cube9"></div>
     </div>
   </body>
   <!-- Place your code in the script tag below. You can also use an external .js file -->
-  <script src="camera.js?v=4" defer></script>
+  <script src="camera.js?v=5" defer></script>
   <script>
+    let isLoaded = false;
     let isUlt = false;
     let isAbility = false;
 
@@ -107,12 +191,10 @@
       });
 
       function setSize() {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        video.setAttribute('width', w);
-        video.setAttribute('height', h);
-        canvas.setAttribute('width', w);
-        canvas.setAttribute('height', h);
+        const w = video.width;
+        const h = video.height;
+        canvas.width = w;
+        canvas.height = h;
       }
 
       async function render () {
@@ -124,14 +206,12 @@
 
         const maskBackground = true;
 
-        // Convert the segmentation into a mask to darken the background.
-
         let foregroundColor = {r: 255, g: 0, b: 0, a: 0};
         let backgroundColor = {r: 0, g: 0, b: 0, a: 0};
 
         if (isUlt) {
           foregroundColor = {r: 255, g: 0, b: 0, a: 200};
-          backgroundColor = {r: 0, g: 0, b: 0, a: 100};
+          backgroundColor = {r: 0, g: 0, b: 0, a: 150};
         }
         if (isAbility) {
           foregroundColor = {r: 230, g: 100, b: 0, a: 200};
@@ -146,7 +226,7 @@
 
         const opacity = 0.7;
         const maskBlurAmount = 3;
-        const flipHorizontal = true;
+        const flipHorizontal = !isSP();
 
         if (canvas.width == video.width && canvas.height == video.height) {
           bodyPix.drawMask(
@@ -157,6 +237,15 @@
               maskBlurAmount,
               flipHorizontal
             );
+          if (!isLoaded) {
+            isLoaded = true;
+            console.log('loaded');
+            const ultButton = document.getElementById('ult');
+            const abilityButton = document.getElementById('ability');
+            ultButton.classList.remove('disabled');
+            abilityButton.classList.remove('disabled');
+            document.getElementById('loading').remove();
+          }
         } else {
           setSize();
         }

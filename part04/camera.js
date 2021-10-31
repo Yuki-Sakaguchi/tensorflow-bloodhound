@@ -11,11 +11,17 @@ var constraints = {
   }
 };
 
+function isSP () {
+  return navigator.userAgent.match(/iPhone|Android.+Mobile/);
+}
+
 function success (stream) {
   video.srcObject = stream
   tmpStream = stream
   video.onloadedmetadata = () => {
     console.log('loadedmetadata')
+    video.width = video.videoWidth;
+    video.height = video.videoHeight;
     video.play();
     loadAndPredict()
   };
@@ -26,19 +32,10 @@ function failure (err) {
 }
 
 function setVideoOptions () {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  video.setAttribute('width', w);
-  video.setAttribute('height', h);
-  canvas.setAttribute('width', w);
-  canvas.setAttribute('height', h);
-
   let facingMode = 'user';
-  if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
-    // video.setAttribute('style', '');
+
+  if (isSP()) {
     facingMode = { exact: "environment" };
-  } else {
-    video.setAttribute('style', 'transform: scaleX(-1)')
   }
 
   return {
