@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>transflowテスト</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      video {
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+      }
+      .wrapper {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      .button {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 20px;
+        margin: auto;
+        width: 80px;
+        height: 80px;
+        appearance: none;
+        border: none;
+        background-color: transparent;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      .button.ult {
+        background-image: url(./icon_off.png);
+      }
+      .button.ult.is-active {
+        background-image: url(./icon_on.png);
+      }
+      .button.ability {
+        background-image: url(./icon_ability.png);
+        left: -300px;
+      }
+    </style>
+    <!-- Load TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.2"></script>
+    <!-- Load BodyPix -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <video id="video" autoplay playsinline="true" width="500" height="500"></video>
+      <canvas id="canvas"></canvas>
+      <button id="ult" class="button ult" onClick="ult()"></button>
+      <button id="ability" class="button ability" onClick="ability()"></button>
+    </div>
+  </body>
+  <!-- Place your code in the script tag below. You can also use an external .js file -->
+  <script src="camera.js" defer></script>
+  <script>
+    let isUlt = false;
+    let isAbility = false;
+
+    function ult() {
+      if (isUlt) return;
+
+      const button = document.getElementById('ult');
+      isUlt = true;
+      button.classList.add('is-active');
+
+      setTimeout(function () {
+        button.classList.remove('is-active');
+        isUlt = false;
+      }, 30000);
+    }
+
+    function ability() {
+      if (isAbility) return;
+      
+      isAbility = true;
+
+      setTimeout(function () {
+        isAbility = false;
+      }, 3000);
+    }
+
+    async function loadAndPredict() {
+      const canvas = document.getElementById('canvas');
+      const video = document.getElementById('video');
+
+      const net = await bodyPix.load({
+        architecture: 'MobileNetV1',
+        outputStride: 16,
+        multiplier: 0.75,
+        quantBytes: 2
+      });
+
+      async function render () {
+        const segmentation = await net.segmentPerson(video, {
+          flipHorizontal: false,
+          internalResolution: 'medium',
+          segmentationThreshold: 0.8,
+        });
+
+        const maskBackground = true;
+
+        // Convert the segmentation into a mask to darken the background.
+
+        let foregroundColor = {r: 255, g: 0, b: 0, a: 0};
+        let backgroundColor = {r: 0, g: 0, b: 0, a: 0};
+
+        if (isUlt) {
+          foregroundColor = {r: 255, g: 0, b: 0, a: 200};
+          backgroundColor = {r: 0, g: 0, b: 0, a: 100};
+        }
+        if (isAbility) {
+          foregroundColor = {r: 230, g: 100, b: 0, a: 200};
+          backgroundColor = {r: 0, g: 0, b: 100, a: 80};
+        }
+
+        const backgroundDarkeningMask = bodyPix.toMask(
+            segmentation,
+            foregroundColor,
+            backgroundColor
+          );
+
+        const opacity = 0.7;
+        const maskBlurAmount = 3;
+        const flipHorizontal = true;
+        
+        bodyPix.drawMask(
+            canvas,
+            video,
+            backgroundDarkeningMask,
+            opacity,
+            maskBlurAmount,
+            flipHorizontal
+          );
+
+        requestAnimationFrame(render);
+      }
+
+      render();
+    }
+  </script>
+</html>

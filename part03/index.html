@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>transflowテスト</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      video {
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+      }
+      .wrapper {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+    <!-- Load TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.2"></script>
+    <!-- Load BodyPix -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <video id="video" autoplay playsinline="true" width="500" height="500"></video>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <!-- Place your code in the script tag below. You can also use an external .js file -->
+  <script src="camera.js" defer></script>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const videoElement = document.getElementById('video');
+
+    async function loadAndPredict() {
+      const net = await bodyPix.load({
+        architecture: 'MobileNetV1',
+        outputStride: 16,
+        multiplier: 0.75,
+        quantBytes: 2
+      });
+
+      async function render () {
+        const segmentation = await net.segmentPerson(videoElement, {
+          flipHorizontal: false,
+          internalResolution: 'medium',
+          segmentationThreshold: 0.7,
+        });
+
+        const backgroundBlurAmount = 10;
+        const edgeBlurAmount = 3;
+        const flipHorizontal = true;
+
+        bodyPix.drawBokehEffect(
+            canvas,
+            videoElement,
+            segmentation,
+            backgroundBlurAmount,
+            edgeBlurAmount,
+            flipHorizontal
+          );
+
+        requestAnimationFrame(render);
+      }
+
+      render();
+    }
+  </script>
+</html>
