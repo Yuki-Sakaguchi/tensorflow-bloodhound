@@ -25,24 +25,24 @@ function failure (err) {
   alert(err.name + ':' + err.message)
 }
 
-function setCameraMode () {
-  if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
-    video.setAttribute('style', '');
-    return { exact: "environment" };
-  } else {
-    video.setAttribute('style', 'transform: scaleX(-1)')
-    return 'user';
-  }
-}
-
-function setSize () {
+function setVideoOptions () {
   const w = window.innerWidth;
   const h = window.innerHeight;
   video.setAttribute('width', w);
   video.setAttribute('height', h);
   canvas.setAttribute('width', w);
   canvas.setAttribute('height', h);
+
+  let facingMode = 'user';
+  video.setAttribute('style', 'transform: scaleX(-1)')
+  if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
+    video.setAttribute('style', '');
+    facingMode = { exact: "environment" };
+  }
+
   return {
+    facingMode: facingMode,
+    frameRate: { ideal: 10, max: 15 }, // フレームレートを下げる
     width: {
       min: 0,
       max: window.innerWidth,
@@ -56,8 +56,7 @@ function setSize () {
 }
 
 function syncCamera (video, isFront) {
-  constraints.video.facingMode = setCameraMode()
-  constraints.video = setSize();
+  constraints.video = setVideoOptions();
 
   if (tmpStream !== null) {
     tmpStream.getVideoTracks().forEach(camera => {
@@ -78,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('resize', () => {
-  const config = setSize();
+  const config = setVideoOptions();
   const [track] = tmpStream.getVideoTracks();
   track.applyConstraints(config)
     .then(() => {
