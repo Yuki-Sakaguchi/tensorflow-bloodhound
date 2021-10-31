@@ -34,10 +34,11 @@ function setVideoOptions () {
   canvas.setAttribute('height', h);
 
   let facingMode = 'user';
-  video.setAttribute('style', 'transform: scaleX(-1)')
   if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
-    video.setAttribute('style', '');
+    // video.setAttribute('style', '');
     facingMode = { exact: "environment" };
+  } else {
+    video.setAttribute('style', 'transform: scaleX(-1)')
   }
 
   return {

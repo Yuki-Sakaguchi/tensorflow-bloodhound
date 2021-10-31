@@ -106,6 +106,15 @@
         quantBytes: 2
       });
 
+      function setSize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        video.setAttribute('width', w);
+        video.setAttribute('height', h);
+        canvas.setAttribute('width', w);
+        canvas.setAttribute('height', h);
+      }
+
       async function render () {
         const segmentation = await net.segmentPerson(video, {
           flipHorizontal: false,
@@ -138,15 +147,19 @@
         const opacity = 0.7;
         const maskBlurAmount = 3;
         const flipHorizontal = true;
-        
-        bodyPix.drawMask(
-            canvas,
-            video,
-            backgroundDarkeningMask,
-            opacity,
-            maskBlurAmount,
-            flipHorizontal
-          );
+
+        if (canvas.width == video.width && canvas.height == video.height) {
+          bodyPix.drawMask(
+              canvas,
+              video,
+              backgroundDarkeningMask,
+              opacity,
+              maskBlurAmount,
+              flipHorizontal
+            );
+        } else {
+          setSize();
+        }
 
         requestAnimationFrame(render);
       }
