@@ -27,7 +27,7 @@ function failure (err) {
 
 function setCameraMode () {
   if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
-    video.setAttribute('style');
+    video.setAttribute('style', '');
     return { exact: "environment" };
   } else {
     video.setAttribute('style', 'transform: scaleX(-1)')
